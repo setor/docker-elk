@@ -5,8 +5,8 @@ services:
   elasticsearch:
     build: elasticsearch/
     ports:
-      - "9200:9200"
-      - "9300:9300"
+      - "127.0.0.1:9200:9200"
+      - "127.0.0.1:9300:9300"
     environment:
       ES_JAVA_OPTS: "-Xmx256m -Xms256m"
       # disable X-Pack
@@ -18,6 +18,8 @@ services:
       xpack.watcher.enabled: "false"
     networks:
       - elk
+    volumes:
+      - /usr/share/elasticsearch/data:/usr/share/elasticsearch/data
 
   logstash:
     build: logstash/
@@ -25,24 +27,33 @@ services:
       - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
       - ./logstash/pipeline:/usr/share/logstash/pipeline
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5050:5050"
     environment:
       LS_JAVA_OPTS: "-Xmx256m -Xms256m"
     networks:
       - elk
     depends_on:
       - elasticsearch
+      - redis
 
   kibana:
     build: kibana/
     volumes:
       - ./kibana/config/:/usr/share/kibana/config
     ports:
-      - "5601:5601"
+      - "127.0.0.1:5601:5601"
     networks:
       - elk
     depends_on:
       - elasticsearch
+
+  redis:
+    image: redis
+    networks:
+      - elk
+    ports:
+      - "127.0.0.1:6479:6379"
+
 
 networks:
 
